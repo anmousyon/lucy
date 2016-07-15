@@ -1,0 +1,2 @@
+# lucy
+lily in go

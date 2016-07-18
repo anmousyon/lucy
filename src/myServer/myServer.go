@@ -3,14 +3,10 @@ package myServer
 import(
     "io"
     "net/http"
-    _ "github.com/mattn/go-sqlite3"
     "github.com/jinzhu/gorm"
-    _ "github.com/jinzhu/gorm/dialects/sqlite"
     "github.com/jzelinskie/geddit"
     "strconv"
     "time"
-    "bufio"
-    "os"
     "fmt"
 )
 
@@ -48,6 +44,7 @@ func hello(w http.ResponseWriter, r *http.Request){
 
 var mux map[string]func(http.ResponseWriter, *http.Request)
 
+//StartServer starts a server on localhost:8000
 func StartServer(){
     db, _ := gorm.Open("sqlite3", "lucy.db")
 
@@ -95,11 +92,12 @@ func getPosts(sub string) []*geddit.Submission{
     session, err := geddit.NewLoginSession(
         "anmousyony",
         "buffalo12",
-        "lucyprogram",
+        "database catcher by /u/anmousyony",
     )
 
     if err != nil{
         fmt.Println(err)
+        return nil
     }
 
     subOpts := geddit.ListingOptions{
@@ -122,6 +120,9 @@ func getPosts(sub string) []*geddit.Submission{
     }
     */
     fmt.Println("got posts")
+    for _, post := range submissions{
+        fmt.Println(post.Title)
+    }
     return submissions
 }
 /*
@@ -133,9 +134,8 @@ func getComments(reddit geddit.LoginSession, post geddit.Submission) []*geddit.C
 func simpleBool(boolean string) string{
     if boolean == "True"{
         return "1"
-    } else{
-        return "0"
     }
+    return "0"
 }
 /*
 func simpleSent(sentiment string) string {

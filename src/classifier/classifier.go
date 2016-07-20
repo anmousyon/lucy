@@ -4,31 +4,23 @@ import (
     "fmt"
     "github.com/sjwhitworth/golearn/base"
     "github.com/sjwhitworth/golearn/trees"
+	"github.com/sjwhitworth/golearn/evaluation"
+    "github.com/gonum/matrix/mat64"
 )
 
-func fit(data [][]string){
-    data, classes, encoders := mlHelpers.prep(data)
-    trainData, testData := base.InstancesTrainTestSplit(data, 0.10)
-    classifier := trees.id3()
-    trainData, trainClasses := mlHelpers.extract(trainData, 6)
-    testData, testClasses := mlHelpers.extract(testData, 6)
-    classifier.fit(trainData, trainClasses)
-    classify(encoders, testData, testClasses)
-}
-
-func classify(encoders []struct, test [][]string, testClasses []string){
-    prediction := cls.Predict(testData)
-    fmt.print("prediction")
-    for item := range prediction{
-        fmt.print(item)
+//FitClassify the data and print prediction
+func FitClassify(encoded *mat64.Dense, classes []float64){
+    readyData := base.InstancesFromMat64(len(classes), 10, encoded)
+    trainData, testData := base.InstancesTrainTestSplit(readyData, 0.10)
+    tree := trees.NewID3DecisionTree(0.6)
+    err := tree.Fit(trainData)
+    if err != nil{
+        panic(err)
     }
-    fmt.print("actual")
-    for item := range testData{
-        fmt.print(item)
+    predictions, err := tree.Predict(testData)
+    if err != nil{
+        panic(err)
     }
-}
-
-func train(){
-    data := mlHelpers.getData()
-    fit(data)
+	cf, err := evaluation.GetConfusionMatrix(testData, predictions)
+	fmt.Println(evaluation.GetSummary(cf))
 }

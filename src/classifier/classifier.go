@@ -9,18 +9,18 @@ import (
 )
 
 //FitClassify the data and print prediction
-func FitClassify(encoded *mat64.Dense, classes []float64){
-    readyData := base.InstancesFromMat64(len(classes), 10, encoded)
-    trainData, testData := base.InstancesTrainTestSplit(readyData, 0.10)
+func FitClassify(enc *mat64.Dense, cls []float64){
+    inst := base.InstancesFromMat64(len(cls), 10, enc)
+    dTrain, dTest := base.InstancesTrainTestSplit(inst, 0.10)
     tree := trees.NewID3DecisionTree(0.6)
-    err := tree.Fit(trainData)
+    err := tree.Fit(dTrain)
     if err != nil{
-        panic(err)
+        fmt.Println("fit error: ", err)
     }
-    predictions, err := tree.Predict(testData)
+    pred, err := tree.Predict(dTest)
     if err != nil{
-        panic(err)
+        fmt.Println("prediction error: ", err)
     }
-	cf, err := evaluation.GetConfusionMatrix(testData, predictions)
+	cf, err := evaluation.GetConfusionMatrix(dTest, pred)
 	fmt.Println(evaluation.GetSummary(cf))
 }

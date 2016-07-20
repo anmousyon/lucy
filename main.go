@@ -8,15 +8,12 @@ import(
 )
 
 func main(){
-    err := helpers.FillDB()
-    if err != nil{
-        panic(err)
-    }
-    data := mlHelpers.GetData()
-    encoded, classes, encoders := mlHelpers.Prep(data)
-    for _ = range encoders{
+    helpers.FillDB()
+    d := mlHelpers.Data()
+    enc, cls, encs := mlHelpers.Prep(d)
+    for _ = range encs{
         break
     }
-    classifier.FitClassify(encoded, classes)
+    classifier.FitClassify(enc, cls)
     myServer.StartServer()
 }

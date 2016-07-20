@@ -9,9 +9,8 @@ import (
     "github.com/gonum/matrix/mat64"
 )
 
-//GetData from the database
-func GetData() [][]string{
-    data := [][]string{}
+//Data from the database
+func Data() (data [][]string){
     db, err := sql.Open("sqlite3", "lucy.db")
     rows, err := db.Query("select * from post")
     if err != nil{
@@ -26,88 +25,88 @@ func GetData() [][]string{
         var sub string
         var created string
         var edited string
-        var sentiment float64
+        var sent float64
         var karma int
         var gold int
-        err := rows.Scan(&label, &title, &site, &user, &sub, &created, &edited, &sentiment, &karma, &gold)
+        err := rows.Scan(&label, &title, &site, &user, &sub, &created, &edited, &sent, &karma, &gold)
         if err != nil {
 		    panic(err)
 	    }
-        sentimentString :=strconv.FormatFloat(sentiment, 'E', -1, 64)
-        karmaString := strconv.Itoa(karma)
-        goldString := strconv.Itoa(gold)
-        row := []string{label, title, site, user, sub, created, edited, sentimentString, karmaString, goldString}
+        sentStr :=strconv.FormatFloat(sent, 'E', -1, 64)
+        karmaStr := strconv.Itoa(karma)
+        goldStr := strconv.Itoa(gold)
+        row := []string{label, title, site, user, sub, created, edited, sentStr, karmaStr, goldStr}
         data = append(data, row)
     }
     fmt.Println(data)
     return data
 }
 
-func extractString(data [][]string, col int) ([]string){
-    column := make([]string, len(data))
+func extractString(data [][]string, i int) (column []string){
+    col := make([]string, len(data))
     for row := range data{
-        column[row] = data[row][col]
+        col[row] = data[row][i]
     }
-    return column
+    return col
 }
 
 //ExtractEncoded column from a slice of slices
-func ExtractEncoded(encoded [][]float64, col int) ([]float64){
-    column := make([]float64, len(encoded))
-    for row := range encoded{
-        column[row] = encoded[row][col]
+func ExtractEncoded(enc [][]float64, i int) (column []float64){
+    col := make([]float64, len(enc))
+    for row := range enc{
+        col[row] = enc[row][i]
     }
-    return column
+    return col
 }
 
-func combine(columns [][]float64) *mat64.Dense{
-    dataMatrix := mat64.NewDense(len(columns[0]), len(columns), nil)
-    for row := range columns[0]{
-        for column := range columns{
-            dataMatrix.Set(column, row, columns[column][row])
+func combine(cols [][]float64) (matrix *mat64.Dense){
+    m := mat64.NewDense(len(cols[0]), len(cols), nil)
+    for row := range cols[0]{
+        for col := range cols{
+            m.Set(col, row, cols[col][row])
         }
     }
-    return dataMatrix
+    return m
 }
 
-func encode(column []string) ([]float64, map[string]float64){
-    unique := map[string]float64{}
-    encoded := make([]float64, len(column), len(column))
-    counter := 0.0
-    for _, item := range column{
+func encode(col []string) (encoded []float64, encoders map[string]float64){
+    var unq map[string]float64
+    enc := make([]float64, len(col), len(col))
+    n := 0.0
+    for _, i := range col{
         match := false
-        for value := range unique{
-            if item == value{
+        for v := range unq{
+            if i == v{
                 match = true
                 break
             }
         }
         if !match{
-            unique[item] = counter
-            counter++
+            unq[i] = n
+            n++
         }
     }
-    for index, item := range column{
-        for key, value := range unique{
-            if item == key{
-                encoded[index] = value
+    for x, i := range col{
+        for k, v := range unq{
+            if i == k{
+                enc[x] = v
                 break
             }
         }
     }
-    return encoded, unique
+    return enc, unq
 }
 
 //Prep the data for golearn
-func Prep(data [][]string) (*mat64.Dense, []float64, []map[string]float64){
-    columns := make([][]float64, len(data[0]))
-    encoders := make([]map[string]float64, len(data[0]))
-    for col := range data[0]{
-        column := extractString(data, col)
-        columns[col], encoders[col] = encode(column)
+func Prep(data [][]string) (encoded *mat64.Dense, classes []float64, encoders []map[string]float64){
+    cols := make([][]float64, len(data[0]))
+    encs := make([]map[string]float64, len(data[0]))
+    for x := range data[0]{
+        col := extractString(data, x)
+        cols[x], encs[x] = encode(col)
     }
-    encodedData := combine(columns)
-    classes := make([]float64, len(columns[0]))
-    mat64.Col(classes, 6, encodedData)
-    return encodedData, classes, encoders
+    enc := combine(cols)
+    cls := make([]float64, len(cols[0]))
+    mat64.Col(cls, 6, enc)
+    return enc, cls, encs
 }

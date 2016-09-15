@@ -70,7 +70,7 @@ func combine(cols [][]float64) (matrix *mat64.Dense){
 }
 
 func encode(col []string) (encoded []float64, encoders map[string]float64){
-    var unq map[string]float64
+    unq := map[string]float64{}
     enc := make([]float64, len(col), len(col))
     n := 0.0
     for _, i := range col{

@@ -9,7 +9,7 @@ import(
     //database driver for sqlite3
     _ "github.com/mattn/go-sqlite3"
     //"github.com/wolfgangmeyers/go-rake/rake"
-    "github.com/jzelinskie/geddit"
+    "github.com/aggrolite/geddit"
 )
 
 
@@ -26,15 +26,15 @@ func FillDB(){
     if err != nil{
         fmt.Println("error on open", err)
     }
+    createTable(db)
     tx, err := db.Begin()
     if err != nil{
         fmt.Println("error on begin", err)
     }
-    createTable(db)
     posts := Posts("python")
+    stmt, err := tx.Prepare("Insert into post values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
     for _, i := range posts{
-        _, err := db.Exec(
-            "Insert into post (label, title, site, sub, user, created, edited, sentiment, karma, gold) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        _, err := stmt.Exec(
             i.ID,
             i.Title,
             i.URL,
@@ -95,11 +95,16 @@ func round(x int) (rounded int){
 }
 
 //Login to reddit
-func Login() (session *geddit.LoginSession, err error){
-    s, err := geddit.NewLoginSession(
-        "anmousyony",
-        "buffalo12",
-        "lucy v0.01 for machine learning research by /u/anmousyony",
+func Login() (session *geddit.OAuthSession, err error){
+    o, err := geddit.NewOAuthSession(
+        "-400hLn5ypKJhg",
+        "KuiYAJxYa1gqDBd4eg_Y-A3fuTw",
+        "lucy v.01 machine learning sentiment analysis research by /u/anmousyony",
+        "http://127.0.0.1:65010/authorize_callback",
     )
-    return s, err
+    if err != nil{
+        fmt.Println("error on oauth session", err)
+    }
+    err = o.LoginAuth("anmousyony", "buffalo12")
+    return o, err
 }

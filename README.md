@@ -1,2 +1,0 @@
-# lucy
-lily in go
